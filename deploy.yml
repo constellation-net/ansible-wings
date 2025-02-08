@@ -1,0 +1,15 @@
+---
+- name: Install Wings onto nodes
+  hosts: wings
+  tasks:
+    - include_tasks: tasks/fstab.yml
+      when: ansible_distribution == 'Debian'
+
+    - include_tasks: tasks/docker.yml
+      when: ansible_distribution == 'Debian'
+
+    - include_tasks: tasks/install.yml
+      when: ansible_distribution == 'Debian'
+
+    - include_tasks: tasks/daemonise.yml
+      when: ansible_distribution == 'Debian'

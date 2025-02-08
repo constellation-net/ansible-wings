@@ -1,0 +1,42 @@
+---
+- name: Create Pterodactyl directory
+  ansible.builtin.file:
+    path: /etc/pterodactyl
+    state: directory
+    group: root
+    owner: root
+    mode: "0775"
+    recurse: true
+
+- name: Create Wings directory
+  ansible.builtin.file:
+    path: /var/run/wings
+    state: directory
+    owner: root
+    group: root
+    mode: "0775"
+    recurse: true
+
+- name: Determine host architecture
+  ansible.builtin.set_fact:
+    arch: amd64
+  when: ansible_architecture == 'x86_64'
+
+- name: Determine host architecture
+  ansible.builtin.set_fact:
+    arch: arm64
+  when: ansible_architecture == 'aarch64'
+
+- name: Download and install Wings binary
+  ansible.builtin.get_url:
+    url: https://github.com/pterodactyl/wings/releases/latest/download/wings_linux_{{ arch }}
+    dest: /usr/local/bin/wings
+    mode: "0700" # U:RWX, G:N, O:N
+
+- name: Create Wings config file
+  ansible.builtin.copy:
+    src: files/{{ inventory_hostname_short }}.yml
+    dest: /etc/pterodactyl/config.yml
+    owner: root
+    group: root
+    mode: "0644"

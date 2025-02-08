@@ -1,0 +1,14 @@
+wings:
+  vars:
+    ansible_become: true
+
+  hosts:
+    clover.starsystem.dev:
+      ansible_host: 10.0.0.241
+      ansible_user: jack
+
+      install_portainer_agent: true
+      drives:
+        - path: /mnt/pterodactyl
+          src: /dev/sdb
+          fstype: ext4

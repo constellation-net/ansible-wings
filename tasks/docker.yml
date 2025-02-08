@@ -1,0 +1,44 @@
+---
+- name: Check if Docker is installed
+  ansible.builtin.command: 
+    cmd: docker --version
+  register: docker_installed
+  ignore_errors: true
+
+- name: Download Docker install script
+  ansible.builtin.get_url:
+    url: https://get.docker.com
+    dest: /tmp/docker.sh
+    mode: "0700" # U:RWX, G:N, O:N
+  when: docker_installed.failed
+
+- name: Run Docker install script
+  ansible.builtin.command:
+    cmd: /tmp/docker.sh
+  environment:
+    CHANNEL: stable
+  register: result
+  changed_when: result.rc == 0
+  when: docker_installed.failed
+
+- name: Enable Docker at boot
+  ansible.builtin.systemd_service:
+    name: docker
+    enabled: true
+    state: started
+
+- name: Create Portainer Agent container
+  community.docker.docker_container:
+    name: portainer-agent
+    image: portainer/agent:latest
+    detach: true
+    published_ports:
+      - "9001:9001"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+      - "/var/lib/docker/volumes:/var/lib/docker/volumes"
+      - "/:/host"
+    recreate: true
+    restart_policy: always
+    state: started
+  when: install_portainer_agent
